@@ -8,15 +8,6 @@ width, height = screen.get_size()
 pygame.display.set_caption("Space Shooter")
 clock = pygame.time.Clock()
 
-bd = pygame.transform.scale(
-    pygame.image.load("bd.png").convert_alpha(), (width, height)
-)
-lev = pygame.transform.scale(
-    pygame.image.load("levels.png").convert_alpha(), (width, height)
-)
-sett = pygame.transform.scale(
-    pygame.image.load("set.png").convert_alpha(), (width, height)
-)
 
 star_field_slow = []
 star_field_medium = []
