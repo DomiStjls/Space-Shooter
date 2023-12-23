@@ -1,4 +1,5 @@
 import os
+
 import pygame
 
 # глобальные переменные
@@ -53,9 +54,14 @@ class Enemy(pygame.sprite.Sprite):
         self.rect.y -= self.rect.h // 2
 
     def update(self):
-        global running
         if pygame.sprite.spritecollideany(self, player_bullets):
             enemy_group.remove(self)
+            for key, value in events.items():
+                if value == self:
+                    del events[key]
+                    break
+
+    def shoot(self):
         Bullet("bullet.png", self.rect.x + self.rect.w // 2, self.rect.y + self.rect.h, 0, self.bul_speed)
 
 
@@ -104,6 +110,8 @@ class Present(pygame.sprite.Sprite):
     pass
 
 
+events = {}
+k = 2
 level = "q.txt"
 with open("data/" + level) as f:
     q = f.readlines()
@@ -114,7 +122,10 @@ with open("data/" + level) as f:
             if char == "@":
                 player = Player("player.png", x * j + x / 2, y * i + y / 2)
             elif char != ".":
-                Enemy(int(char), x * j + x / 2, y * i + y / 2)
+                EVENT = pygame.USEREVENT + k
+                k += 1
+                pygame.time.set_timer(EVENT, (int(char) + 1) * 1000)
+                events[EVENT] = Enemy(int(char), x * j + x / 2, y * i + y / 2)
 
 pygame.time.set_timer(BULLETEVENT, 500)
 vx = vy = 0
@@ -132,7 +143,7 @@ while running:
                 vy -= SPEED
             if event.key == pygame.K_DOWN:
                 vy += SPEED
-        if event.type == pygame.KEYUP:
+        elif event.type == pygame.KEYUP:
             if event.key == pygame.K_LEFT:
                 vx += SPEED
             if event.key == pygame.K_RIGHT:
@@ -141,11 +152,12 @@ while running:
                 vy += SPEED
             if event.key == pygame.K_DOWN:
                 vy -= SPEED
-        if event.type == BULLETEVENT:
+        elif event.type == BULLETEVENT:
             bullet = Bullet(
                 "bullet.png", player.rect.x + player.rect.w // 2, player.rect.y, 0, -20, 1
             )
-            enemy_group.update()
+        elif event.type in events.keys():
+            events[event.type].shoot()
 
     # движение игрока
     player.rect.x += vx
@@ -160,7 +172,10 @@ while running:
     bullet_group.update()
     bullet_group.draw(screen)
 
+    enemy_group.update()
     enemy_group.draw(screen)
+    if not events:
+        running = False
 
     pygame.display.flip()
     clock.tick(FPS)
