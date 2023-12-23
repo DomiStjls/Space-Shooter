@@ -2,6 +2,20 @@ import os
 
 import pygame
 
+# константы
+FPS = 60
+
+SPEED = 10
+DURATION = 100
+enemies = [
+    (0, "enemyr.png", "bullet.png", 1000, [(0, 10)]),
+    (1, "enemyg.png", "bullet.png", 750, [(2, 15), (-2, 15)]),
+    (2, "enemyb.png", "bullet.png", 1500, [(0, 10), (3, 20), (-3, 20)]),
+]
+players = [
+    (0, "player.png", 10, "bullet.png", 100, [(0, -20)])
+]
+
 # глобальные переменные
 pygame.init()
 WIDTH, HEIGHT = 600, 400
@@ -9,17 +23,14 @@ WIDTH, HEIGHT = 600, 400
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 
-# константы
-FPS = 60
-SPEED = 10  # px/frame speed of player
-
 player_group = pygame.sprite.Group()
 enemy_group = pygame.sprite.Group()
 bullet_group = pygame.sprite.Group()
 player_bullets = pygame.sprite.Group()
 enemy_bullets = pygame.sprite.Group()
 
-BULLETEVENT = pygame.USEREVENT + 1
+events = {}
+running = False
 
 
 def load_image(name, color_key=-1):
@@ -40,18 +51,18 @@ def load_image(name, color_key=-1):
 
 
 class Enemy(pygame.sprite.Sprite):
-    types = [
-        (load_image("enemyr.png"), 1),
-        (load_image("enemyb.png"), 2),
-        (load_image("enemyg.png"), 3),
-    ]
 
     def __init__(self, type, pos_x, pos_y):
         super().__init__(enemy_group)
-        self.image, self.bul_speed = Enemy.types[type]
+        self.type, image, self.bullet_filename, duration, self.speeds = enemies[type]
+        self.image = load_image(image)
         self.rect = self.image.get_rect().move(pos_x, pos_y)
         self.rect.x -= self.rect.w // 2
         self.rect.y -= self.rect.h // 2
+
+        EVENT = pygame.USEREVENT + len(events) + 1
+        pygame.time.set_timer(EVENT, duration)
+        events[EVENT] = self
 
     def update(self):
         if pygame.sprite.spritecollideany(self, player_bullets):
@@ -62,27 +73,37 @@ class Enemy(pygame.sprite.Sprite):
                     break
 
     def shoot(self):
-        Bullet("bullet.png", self.rect.x + self.rect.w // 2, self.rect.y + self.rect.h, 0, self.bul_speed)
+        for x, y in self.speeds:
+            Bullet(self.bullet_filename, self.rect.x + self.rect.w // 2, self.rect.y + self.rect.h, x, y)
 
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, image, pos_x, pos_y):
+    def __init__(self, pos_x, pos_y, type=0):
         super().__init__(player_group)
-        self.image = load_image(image)
+        self.type, player_filename, self.speed, self.bullet_filename, duration, self.speeds = players[type]
+        self.image = load_image(player_filename)
         self.rect = self.image.get_rect().move(pos_x, pos_y)
         self.rect.x -= self.rect.w // 2
         self.rect.y -= self.rect.h // 2
+
+        EVENT = pygame.USEREVENT + len(events) + 1
+        pygame.time.set_timer(EVENT, duration)
+        events[EVENT] = self
 
     def update(self):
         global running
         if pygame.sprite.spritecollideany(self, enemy_bullets):
             running = False
 
+    def shoot(self):
+        for x, y in self.speeds:
+            Bullet(self.bullet_filename, self.rect.x + self.rect.w // 2, self.rect.y, x, y, 1)
+
 
 class Bullet(pygame.sprite.Sprite):
-    def __init__(self, image, pos_x, pos_y, vx, vy, whose=0):  # whose = 0 - вражеская 1 - своя
+    def __init__(self, image, pos_x, pos_y, vx, vy, whose=0):  # whose = 0 - вражеская, 1 - своя
         super().__init__(bullet_group)
-        if whose == 0:
+        if not whose:
             enemy_bullets.add(self)
         else:
             player_bullets.add(self)
@@ -94,7 +115,6 @@ class Bullet(pygame.sprite.Sprite):
         self.whose = whose
 
     def update(self):
-        global running
         self.rect.x += self.vx
         self.rect.y += self.vy
         if (
@@ -110,73 +130,69 @@ class Present(pygame.sprite.Sprite):
     pass
 
 
-events = {}
-k = 2
-level = "q.txt"
-with open("data/" + level) as f:
-    q = f.readlines()
-    x = WIDTH / (len(q[0]) - 1)
-    y = HEIGHT / len(q)
-    for i, line in enumerate(q):
-        for j, char in enumerate(line[:-1]):
-            if char == "@":
-                player = Player("player.png", x * j + x / 2, y * i + y / 2)
-            elif char != ".":
-                EVENT = pygame.USEREVENT + k
-                k += 1
-                pygame.time.set_timer(EVENT, (int(char) + 1) * 1000)
-                events[EVENT] = Enemy(int(char), x * j + x / 2, y * i + y / 2)
+def start_level(level):
+    global events, running
+    events = {}
+    with open("data/" + level) as f:
+        q = f.readlines()
+        x = WIDTH / (len(q[0]) - 1)
+        y = HEIGHT / len(q)
+        for i, line in enumerate(q):
+            for j, char in enumerate(line[:-1]):
+                if char == "@":
+                    player = Player(x * j + x / 2, y * i + y / 2)
+                elif char != ".":
+                    Enemy(int(char), x * j + x / 2, y * i + y / 2)
 
-pygame.time.set_timer(BULLETEVENT, 500)
-vx = vy = 0
-running = True
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
+    vx = vy = 0
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT:
+                    vx -= player.speed
+                if event.key == pygame.K_RIGHT:
+                    vx += player.speed
+                if event.key == pygame.K_UP:
+                    vy -= player.speed
+                if event.key == pygame.K_DOWN:
+                    vy += player.speed
+            elif event.type == pygame.KEYUP:
+                if event.key == pygame.K_LEFT:
+                    vx += player.speed
+                if event.key == pygame.K_RIGHT:
+                    vx -= player.speed
+                if event.key == pygame.K_UP:
+                    vy += player.speed
+                if event.key == pygame.K_DOWN:
+                    vy -= player.speed
+            elif event.type in events.keys():
+                events[event.type].shoot()
+
+        player.rect.x += vx
+        player.rect.y += vy
+        player.rect.x = max(0, min(WIDTH - player.rect.w, player.rect.x))
+        player.rect.y = max(0, min(HEIGHT - player.rect.h, player.rect.y))
+
+        screen.fill(255)
+        player_group.update()
+        player_group.draw(screen)
+
+        bullet_group.update()
+        bullet_group.draw(screen)
+
+        enemy_group.update()
+        enemy_group.draw(screen)
+
+        if not events:
             running = False
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_LEFT:
-                vx -= SPEED
-            if event.key == pygame.K_RIGHT:
-                vx += SPEED
-            if event.key == pygame.K_UP:
-                vy -= SPEED
-            if event.key == pygame.K_DOWN:
-                vy += SPEED
-        elif event.type == pygame.KEYUP:
-            if event.key == pygame.K_LEFT:
-                vx += SPEED
-            if event.key == pygame.K_RIGHT:
-                vx -= SPEED
-            if event.key == pygame.K_UP:
-                vy += SPEED
-            if event.key == pygame.K_DOWN:
-                vy -= SPEED
-        elif event.type == BULLETEVENT:
-            bullet = Bullet(
-                "bullet.png", player.rect.x + player.rect.w // 2, player.rect.y, 0, -20, 1
-            )
-        elif event.type in events.keys():
-            events[event.type].shoot()
 
-    # движение игрока
-    player.rect.x += vx
-    player.rect.y += vy
-    player.rect.x = max(0, min(WIDTH - player.rect.w, player.rect.x))
-    player.rect.y = max(0, min(HEIGHT - player.rect.h, player.rect.y))
+        pygame.display.flip()
+        clock.tick(FPS)
+    pygame.quit()
 
-    screen.fill(255)
-    player_group.update()
-    player_group.draw(screen)
 
-    bullet_group.update()
-    bullet_group.draw(screen)
-
-    enemy_group.update()
-    enemy_group.draw(screen)
-    if not events:
-        running = False
-
-    pygame.display.flip()
-    clock.tick(FPS)
-pygame.quit()
+if __name__ == "__main__":
+    start_level("q.txt")
