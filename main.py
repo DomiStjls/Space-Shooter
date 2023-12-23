@@ -164,4 +164,8 @@ if f == 1:
         input_rect.w = max(width * 2 // 3, text_surface.get_width() + 10)
         pygame.display.flip()
         clock.tick(60)
+elif f == 2:
+    import game
+
+
 pygame.quit()
