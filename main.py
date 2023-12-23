@@ -10,16 +10,16 @@ pygame.display.set_caption("Space Shooter")
 
 clock = pygame.time.Clock()
 fon = pygame.transform.scale(
-    pygame.image.load("base3.png").convert_alpha(), (WIDTH, HEIGHT)
+    pygame.image.load("data\base3.png").convert_alpha(), (WIDTH, HEIGHT)
 )
 bd = pygame.transform.scale(
-    pygame.image.load("bd.png").convert_alpha(), (WIDTH, HEIGHT)
+    pygame.image.load("data\bd.png").convert_alpha(), (WIDTH, HEIGHT)
 )
 lev = pygame.transform.scale(
-    pygame.image.load("levels.png").convert_alpha(), (WIDTH, HEIGHT)
+    pygame.image.load("data\levels.png").convert_alpha(), (WIDTH, HEIGHT)
 )
 sett = pygame.transform.scale(
-    pygame.image.load("set.png").convert_alpha(), (WIDTH, HEIGHT)
+    pygame.image.load("data\set.png").convert_alpha(), (WIDTH, HEIGHT)
 )
 screen.blit(fon, (0, 0))
 running = True
