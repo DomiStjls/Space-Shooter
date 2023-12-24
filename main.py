@@ -1,6 +1,6 @@
 import pygame
 import random
-
+from game import start_level
 
 pygame.init()
 screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
@@ -165,7 +165,7 @@ if f == 1:
         pygame.display.flip()
         clock.tick(60)
 elif f == 2:
-    import game
+    start_level("q.txt")
 
 
 pygame.quit()
