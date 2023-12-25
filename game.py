@@ -18,8 +18,8 @@ players = [
 
 # глобальные переменные
 pygame.init()
-WIDTH, HEIGHT = 600, 400
-# WIDTH, HEIGHT = pygame.display.get_desktop_sizes()[0]
+# WIDTH, HEIGHT = 600, 400
+WIDTH, HEIGHT = pygame.display.get_desktop_sizes()[0]
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 
