@@ -1,6 +1,21 @@
 import pygame
 import random
+import sqlite3
 from game import start_level
+
+connection = sqlite3.connect("data/shooter_bd.db")
+cursor = connection.cursor()
+cursor.execute(
+    """
+    CREATE TABLE IF NOT EXISTS Players (
+    id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL,
+    score INTEGER
+    );
+    """
+)
+connection.commit()
+
 
 pygame.init()
 screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
@@ -38,8 +53,8 @@ WHITE = (255, 255, 255)
 LIGHTGREY = (192, 192, 192)
 DARKGREY = (128, 128, 128)
 BLACK = (0, 0, 0)
-RED = (255, 0, 0)
-GREEN = (0, 255, 0)
+LIGHTBL = "lightskyblue"
+GRAY = "gray15"
 BLUE = (0, 0, 255)
 YELLOW = (255, 255, 0)
 MAGENTA = (255, 0, 255)
@@ -69,6 +84,26 @@ textRect3.center = (x, y + height // 8 + 2 * height // 4 - text1.get_height() //
 header.center = (x, head.get_height() // 2)
 
 
+def findpers(n):
+    query = """
+        SELECT name, score
+        FROM Players
+        WHERE name LIKE ?
+    """
+    res = cursor.execute(query, ["%" + n + "%"]).fetchall()
+    if res == []:
+        return "Записи не найдено. Повторите попытку или зарегестрируйтесь."
+    return res
+
+
+def makepers(n):
+    query = """
+    INSERT INTO Players VALUES(?, ?, ?);
+    """
+    res = cursor.execute(query, [int(100000 * random.random()), n, 0]).fetchall()
+    return findpers(n)
+
+
 def choice(f):
     pygame.init()
     screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
@@ -76,21 +111,37 @@ def choice(f):
     pygame.display.set_caption("Space Shooter")
     clock = pygame.time.Clock()
     font = pygame.font.SysFont("Verdana", 60)
+
     enter = font.render("Back", True, WHITE)
     enterR = enter.get_rect()
     enterR.center = (width // 8, height // 8 * 7)
+
     if f == 1:
+        find = font.render("Sing in", True, WHITE)
+        findR = find.get_rect()
+        findR.center = (width // 8, height // 8)
+
+        make = font.render("Make new account", True, WHITE)
+        makeR = make.get_rect()
+        makeR.center = (width // 4 * 3, height // 8)
+
         font = pygame.font.SysFont("Verdana", 30)
         user_text = ""
 
         # pygame.draw.rect(screen, YELLOW, (20, 20, width * 2 // 3, 40), 1)
-
+        ramka = pygame.Rect(
+            width // 3,
+            height // 8 + find.get_height(),
+            width * 1 // 2,
+            height // 8 * 6,
+        )
+        text_box = ""
         input_rect = pygame.Rect(20, 20, width * 2 // 3, 40)
 
-        color_active = pygame.Color("lightskyblue")
-        color_passive = pygame.Color("gray15")
+        color_active = pygame.Color(LIGHTBL)
+        color_passive = pygame.Color(GRAY)
         color = color_passive
-        text_surface = font.render("write your name", True, 0)
+        text_surface = font.render("write your name", True, GRAY)
         screen.blit(text_surface, (input_rect.x, input_rect.y))
         active = False
         r = True
@@ -111,6 +162,12 @@ def choice(f):
                     if enterR.collidepoint(event.pos):
                         r = False
                         start_window()
+                    if findR.collidepoint(event.pos):
+                        res = findpers(user_text)
+                        text_box = res[0][0]
+                    if makeR.collidepoint(event.pos):
+                        res = makepers(user_text)
+                        text_box = res[0][0]
                 if event.type == pygame.KEYDOWN:
                     clav.play()
                     if event.key == pygame.K_BACKSPACE:
@@ -124,12 +181,20 @@ def choice(f):
                 color = color_passive
 
             pygame.draw.rect(screen, color, input_rect)
+            pygame.draw.rect(screen, GRAY, ramka, border_radius=15)
 
             pygame.draw.rect(screen, WHITE, enterR, 1)
             screen.blit(enter, enterR)
+            pygame.draw.rect(screen, WHITE, findR, 1)
+            screen.blit(find, findR)
+            pygame.draw.rect(screen, WHITE, makeR, 1)
+            screen.blit(make, makeR)
 
-            text_surface = font.render(user_text, True, (255, 255, 255))
+            text_surface = font.render(user_text, True, WHITE)
+            print(user_text, text_box)
+            text_rect = font.render(text_box, True, WHITE)
             screen.blit(text_surface, (input_rect.x + 5, input_rect.y))
+            screen.blit(text_rect, (ramka.x + 10, ramka.y + 10))
             input_rect.w = max(width * 2 // 3, text_surface.get_width() + 10)
             pygame.display.flip()
             clock.tick(60)
@@ -171,6 +236,7 @@ def choice(f):
                     if enterR.collidepoint(event.pos):
                         r = False
                         start_window()
+
                         is_level = False
 
             screen.blit(lev1, Rect1)
