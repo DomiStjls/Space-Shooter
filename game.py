@@ -8,9 +8,9 @@ FPS = 60
 SPEED = 10
 DURATION = 100
 enemies = [
-    (0, "enemyr.png", "bullet.png", 1000, [(0, 10)]),
-    (1, "enemyg.png", "bullet.png", 750, [(2, 15), (-2, 15)]),
-    (2, "enemyb.png", "bullet.png", 1500, [(0, 10), (3, 20), (-3, 20)]),
+    (0, "enemyr.png", "bullet.png", 1000, [(0, 10)], 10),
+    (1, "enemyg.png", "bullet.png", 750, [(2, 15), (-2, 15)], 20),
+    (2, "enemyb.png", "bullet.png", 1500, [(0, 10), (3, 20), (-3, 20)], 30),
 ]
 players = [
     (0, "player.png", 10, "bullet.png", 100, [(0, -20)])
@@ -28,7 +28,7 @@ enemy_group = pygame.sprite.Group()
 bullet_group = pygame.sprite.Group()
 player_bullets = pygame.sprite.Group()
 enemy_bullets = pygame.sprite.Group()
-
+score = 0
 events = {}
 running = False
 
@@ -54,7 +54,7 @@ class Enemy(pygame.sprite.Sprite):
 
     def __init__(self, type, pos_x, pos_y):
         super().__init__(enemy_group)
-        self.type, image, self.bullet_filename, duration, self.speeds = enemies[type]
+        self.type, image, self.bullet_filename, duration, self.speeds, self.points = enemies[type]
         self.image = load_image(image)
         self.rect = self.image.get_rect().move(pos_x, pos_y)
         self.rect.x -= self.rect.w // 2
@@ -67,6 +67,8 @@ class Enemy(pygame.sprite.Sprite):
     def update(self):
         if pygame.sprite.spritecollideany(self, player_bullets):
             enemy_group.remove(self)
+            global score
+            score += self.points
             for key, value in events.items():
                 if value == self:
                     del events[key]
@@ -131,7 +133,8 @@ class Present(pygame.sprite.Sprite):
 
 
 def start_level(level):
-    global events, running
+    global events, running, score
+    score = 0
     events = {}
     with open("data/" + level) as f:
         q = f.readlines()
@@ -186,13 +189,13 @@ def start_level(level):
         enemy_group.update()
         enemy_group.draw(screen)
 
-        if not events:
+        if len(events) <= 1:
             running = False
 
         pygame.display.flip()
         clock.tick(FPS)
-    pygame.quit()
+    return score if len(events) else 0
 
 
 if __name__ == "__main__":
-    start_level("q.txt")
+    print(start_level("q.txt"))
