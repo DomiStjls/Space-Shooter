@@ -83,6 +83,9 @@ textRect2.center = (x, y + height // 8 + height // 4 - text1.get_height() // 2)
 textRect3.center = (x, y + height // 8 + 2 * height // 4 - text1.get_height() // 2)
 header.center = (x, head.get_height() // 2)
 
+global user
+user = False
+
 
 def findpers(n):
     query = """
@@ -91,6 +94,7 @@ def findpers(n):
         WHERE name LIKE ?
     """
     res = cursor.execute(query, ["%" + n + "%"]).fetchall()
+    connection.commit()
     if res == []:
         return "Записи не найдено. Повторите попытку или зарегестрируйтесь."
     return res
@@ -101,7 +105,19 @@ def makepers(n):
     INSERT INTO Players VALUES(?, ?, ?);
     """
     res = cursor.execute(query, [int(100000 * random.random()), n, 0]).fetchall()
+    connection.commit()
     return findpers(n)
+
+
+def add_score(u, s):
+    query = """
+        UPDATE Players
+        SET score = score + ?
+        WHERE name LIKE ?
+    """
+    res = cursor.execute(query, [s, u]).fetchall()
+    connection.commit()
+    return findpers(u)
 
 
 def choice(f):
@@ -119,11 +135,11 @@ def choice(f):
     if f == 1:
         find = font.render("Sing in", True, WHITE)
         findR = find.get_rect()
-        findR.center = (width // 8, height // 8)
+        findR.center = (width // 8, 20 + height // 8)
 
         make = font.render("Make new account", True, WHITE)
         makeR = make.get_rect()
-        makeR.center = (width // 4 * 3, height // 8)
+        makeR.center = (width // 4 * 3, 20 + height // 8)
 
         font = pygame.font.SysFont("Verdana", 30)
         user_text = ""
@@ -164,10 +180,12 @@ def choice(f):
                         start_window()
                     if findR.collidepoint(event.pos):
                         res = findpers(user_text)
-                        text_box = res[0][0]
+                        text_box = res[0][0] + " " + str(res[0][1])
+                        user = res[0][0]
                     if makeR.collidepoint(event.pos):
                         res = makepers(user_text)
-                        text_box = res[0][0]
+                        text_box = res[0] + " " + str(res[0][1])
+                        user = res[0][0]
                 if event.type == pygame.KEYDOWN:
                     clav.play()
                     if event.key == pygame.K_BACKSPACE:
@@ -191,7 +209,6 @@ def choice(f):
             screen.blit(make, makeR)
 
             text_surface = font.render(user_text, True, WHITE)
-            print(user_text, text_box)
             text_rect = font.render(text_box, True, WHITE)
             screen.blit(text_surface, (input_rect.x + 5, input_rect.y))
             screen.blit(text_rect, (ramka.x + 10, ramka.y + 10))
@@ -252,7 +269,11 @@ def choice(f):
             pygame.display.flip()
             clock.tick(60)
         if is_level:
-            start_level(d[level_n])
+            score = start_level(d[level_n])
+            print(score)
+            if user:
+                n = add_score(user, score)
+            start_window()
     elif f == 3:
         pass
 
@@ -315,6 +336,9 @@ def start_window():
         clock.tick(60)
 
     choice(f)
+    pygame.quit()
 
 
 start_window()
+
+pygame.quit()
