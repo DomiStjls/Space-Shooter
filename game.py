@@ -1,4 +1,5 @@
 import os
+import random
 
 import pygame
 
@@ -7,15 +8,17 @@ FPS = 60
 
 SPEED = 10
 DURATION = 100
+# тип врага, картинка врага, картинка пули, время между выстрелами, скорости пуль(по Х и по У), очки за убийство врага
 enemies = [
     (0, "enemyr.png", "bullet.png", 1000, [(0, 10)], 10),
     (1, "enemyg.png", "bullet.png", 750, [(2, 15), (-2, 15)], 20),
     (2, "enemyb.png", "bullet.png", 1500, [(0, 10), (3, 20), (-3, 20)], 30),
 ]
-players = [
-    (0, "player.png", 10, "bullet.png", 100, [(0, -20)])
-]
 
+players = [
+    (0, "player.png", 10, "bullet.png", 100, [(0, -10)])
+]
+player = None
 # глобальные переменные
 pygame.init()
 # WIDTH, HEIGHT = 600, 400
@@ -28,9 +31,11 @@ enemy_group = pygame.sprite.Group()
 bullet_group = pygame.sprite.Group()
 player_bullets = pygame.sprite.Group()
 enemy_bullets = pygame.sprite.Group()
+presents_group = pygame.sprite.Group()
 score = 0
 events = {}
 running = False
+bul_dur_k = 1
 
 
 def load_image(name, color_key=-1):
@@ -71,6 +76,7 @@ class Enemy(pygame.sprite.Sprite):
             score += self.points
             for key, value in events.items():
                 if value == self:
+                    Present(self.rect.x + self.rect.w, self.rect.y + self.rect.h, random.randint(4, 6))
                     del events[key]
                     break
 
@@ -82,15 +88,20 @@ class Enemy(pygame.sprite.Sprite):
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y, type=0):
         super().__init__(player_group)
+        self.k = 1
         self.type, player_filename, self.speed, self.bullet_filename, duration, self.speeds = players[type]
         self.image = load_image(player_filename)
         self.rect = self.image.get_rect().move(pos_x, pos_y)
         self.rect.x -= self.rect.w // 2
         self.rect.y -= self.rect.h // 2
+        self.EVENT = pygame.USEREVENT + len(events) + 1
+        self.duration = duration
+        self.set_duration(duration)
+        events[self.EVENT] = self
 
-        EVENT = pygame.USEREVENT + len(events) + 1
-        pygame.time.set_timer(EVENT, duration)
-        events[EVENT] = self
+    def set_duration(self, dur):
+        self.duration = dur
+        pygame.time.set_timer(self.EVENT, dur)
 
     def update(self):
         global running
@@ -99,7 +110,7 @@ class Player(pygame.sprite.Sprite):
 
     def shoot(self):
         for x, y in self.speeds:
-            Bullet(self.bullet_filename, self.rect.x + self.rect.w // 2, self.rect.y, x, y, 1)
+            Bullet(self.bullet_filename, self.rect.x + self.rect.w // 2, self.rect.y, x * self.k, self.k * y, 1)
 
 
 class Bullet(pygame.sprite.Sprite):
@@ -112,6 +123,8 @@ class Bullet(pygame.sprite.Sprite):
         self.image = load_image(image)
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect().move(pos_x, pos_y)
+        self.rect.x -= self.rect.w // 2
+        self.rect.y -= self.rect.h // 2
         self.vx = vx
         self.vy = vy
         self.whose = whose
@@ -129,11 +142,50 @@ class Bullet(pygame.sprite.Sprite):
 
 
 class Present(pygame.sprite.Sprite):
-    pass
+    # types
+    """
+    types:
+    1) меняет тип игрока на 1
+    2) меняет тип игрока на 2
+    3) меняет тип игрока на 3
+    4) увеличивает скорость пуль
+    5) уменьшает задержку между пулями
+    6) увеличивает скорость игрока
+    """
+
+    def __init__(self, x, y, type):
+        super().__init__(presents_group)
+        self.type = type
+        self.image = load_image("present1.png")
+        self.rect = self.image.get_rect().move(x, y)
+        self.rect.x -= self.rect.w // 2
+        self.rect.y -= self.rect.h // 2
+        self.vx = 0
+        self.vy = 5
+
+    def update(self):
+        global player
+        self.rect.x += self.vx
+        self.rect.y += self.vy
+        if pygame.sprite.spritecollideany(self, player_group):
+            presents_group.remove(self)
+            if self.type == 4:
+                player.k *= 3
+            elif self.type == 5:
+                player.set_duration(int(player.duration * 0.1))
+            elif self.type == 6:
+                player.speed *= 5
+        if (
+                self.rect.x + self.rect.w < 0
+                or self.rect.y + self.rect.h < 0
+                or self.rect.x > WIDTH
+                or self.rect.y > HEIGHT
+        ):
+            presents_group.remove(self)
 
 
 def start_level(level):
-    global events, running, score
+    global events, running, score, player
     score = 0
     events = {}
     with open("data/" + level) as f:
@@ -154,6 +206,8 @@ def start_level(level):
             if event.type == pygame.QUIT:
                 running = False
             elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    running = False
                 if event.key == pygame.K_LEFT:
                     vx -= player.speed
                 if event.key == pygame.K_RIGHT:
@@ -188,6 +242,9 @@ def start_level(level):
 
         enemy_group.update()
         enemy_group.draw(screen)
+
+        presents_group.update()
+        presents_group.draw(screen)
 
         if len(events) <= 1:
             running = False
