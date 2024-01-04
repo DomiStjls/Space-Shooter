@@ -12,11 +12,11 @@ enemies = [
     (2, "enemyb.png", "bulletb.png", 2000, [(0, 1)], 30),
 ]
 
-# тип игрока, картинка игрока, скорость игрока, картинка пули, время между выстрелами, скорости пуль по осям
+# тип игрока, картинка игрока, картинка пули, время между выстрелами, скорости пуль по осям
 players = [
-    (0, "playery.png", 5, "bullety.png", 100, [(0, -10)]),
-    (1, "playero.png", 5, "bulleto.png", 200, [(0, -10), (1, -10), (-1, -10)]),
-    (2, "playerw.png", 5, "bulletw.png", 200, [(0, -5), (0, -10)])
+    (0, "playery.png", "bullety.png", 100, [(0, -10)]),
+    (1, "playero.png", "bulleto.png", 200, [(0, -10), (1, -10), (-1, -10)]),
+    (2, "playerw.png", "bulletw.png", 200, [(0, -5), (0, -10)])
 ]
 
 presents = [
@@ -25,7 +25,6 @@ presents = [
     (2, "presentw.png", (0, 2)),
     (3, "presentspeed.png", (0, 2)),
     (4, "presenttime.png", (0, 2)),
-    (5, "presentmove.png", (0, 2)),
 ]
 player = None
 # глобальные переменные
@@ -79,13 +78,13 @@ class Enemy(pygame.sprite.Sprite):
         events[EVENT] = self
 
     def update(self):
+        global score
         if pygame.sprite.spritecollideany(self, player_bullets):
             enemy_group.remove(self)
-            global score
             score += self.points
             for key, value in events.items():
                 if value == self:
-                    Present(self.rect.x + self.rect.w, self.rect.y + self.rect.h, random.randint(0, 5))
+                    Present(self.rect.x + self.rect.w // 2, self.rect.y + self.rect.h // 2, random.randint(0, 10))
                     del events[key]
                     break
 
@@ -95,7 +94,7 @@ class Enemy(pygame.sprite.Sprite):
 
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, pos_x, pos_y, type=1):
+    def __init__(self, pos_x, pos_y, type=0):
         super().__init__(player_group)
         self.k = 1
         self.EVENT = pygame.USEREVENT + len(events) + 1
@@ -106,7 +105,7 @@ class Player(pygame.sprite.Sprite):
         self.rect.y -= self.rect.h // 2
 
     def set_type(self, type=0):
-        self.type, player_filename, self.speed, self.bullet_filename, self.duration, self.speeds = players[type]
+        self.type, player_filename, self.bullet_filename, self.duration, self.speeds = players[type]
         self.image = load_image(player_filename)
         self.set_duration(self.duration)
 
@@ -165,6 +164,8 @@ class Present(pygame.sprite.Sprite):
     """
 
     def __init__(self, x, y, type):
+        if not(0 <= type < len(presents)):
+            return
         super().__init__(presents_group)
         self.type, image, self.speed = presents[type]
         self.image = load_image(image)
@@ -183,8 +184,6 @@ class Present(pygame.sprite.Sprite):
                 player.k *= 2
             elif self.type == 4:
                 player.set_duration(int(player.duration * 0.5))
-            elif self.type == 5:
-                player.speed *= 2
             elif self.type == 0:
                 player.set_type(0)
             elif self.type == 1:
@@ -214,7 +213,6 @@ def start_level(level):
                     player = Player(x * j + x / 2, y * i + y / 2)
                 elif char != ".":
                     Enemy(int(char), x * j + x / 2, y * i + y / 2)
-
     vx = vy = 0
     running = True
     while running:
@@ -224,30 +222,33 @@ def start_level(level):
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     running = False
-                if event.key == pygame.K_LEFT:
-                    vx = -player.speed
-                if event.key == pygame.K_RIGHT:
-                    vx = player.speed
-                if event.key == pygame.K_UP:
-                    vy = -player.speed
-                if event.key == pygame.K_DOWN:
-                    vy = player.speed
-            elif event.type == pygame.KEYUP:
-                # if event.key == pygame.K_LEFT:
-                #     vx = player.speed
-                # if event.key == pygame.K_RIGHT:
-                #     vx = -player.speed
-                # if event.key == pygame.K_UP:
-                #     vy = player.speed
-                # if event.key == pygame.K_DOWN:
-                #     vy = -player.speed
-                vx = 0
-                vy = 0
+            elif event.type == pygame.MOUSEMOTION:
+                player.rect.x = event.pos[0] - player.rect.w // 2
+                player.rect.y = event.pos[1] - player.rect.h // 2
+            #     if event.key == pygame.K_LEFT:
+            #         vx = -player.speed
+            #     if event.key == pygame.K_RIGHT:
+            #         vx = player.speed
+            #     if event.key == pygame.K_UP:
+            #         vy = -player.speed
+            #     if event.key == pygame.K_DOWN:
+            #         vy = player.speed
+            # elif event.type == pygame.KEYUP:
+            #     # if event.key == pygame.K_LEFT:
+            #     #     vx = player.speed
+            #     # if event.key == pygame.K_RIGHT:
+            #     #     vx = -player.speed
+            #     # if event.key == pygame.K_UP:
+            #     #     vy = player.speed
+            #     # if event.key == pygame.K_DOWN:
+            #     #     vy = -player.speed
+            #     vx = 0
+            #     vy = 0
             elif event.type in events.keys():
                 events[event.type].shoot()
 
-        player.rect.x += vx
-        player.rect.y += vy
+        # player.rect.x += vx
+        # player.rect.y += vy
         player.rect.x = max(0, min(WIDTH - player.rect.w, player.rect.x))
         player.rect.y = max(0, min(HEIGHT - player.rect.h, player.rect.y))
 
