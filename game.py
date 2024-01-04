@@ -16,7 +16,9 @@ enemies = [
 ]
 
 players = [
-    (0, "player.png", 10, "bullet.png", 100, [(0, -10)])
+    (0, "player1.png", 10, "bullet.png", 100, [(0, -10)]),
+    (1, "player2.png", 20, "bullet.png", 200, [(0, -10), (1, -10), (-1, -10)]),
+    (2, "player2.png", 30, "bullet.png", 200, [(0, -5), (0, -10)])
 ]
 player = None
 # глобальные переменные
@@ -86,18 +88,20 @@ class Enemy(pygame.sprite.Sprite):
 
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, pos_x, pos_y, type=0):
+    def __init__(self, pos_x, pos_y, type=1):
         super().__init__(player_group)
         self.k = 1
-        self.type, player_filename, self.speed, self.bullet_filename, duration, self.speeds = players[type]
-        self.image = load_image(player_filename)
+        self.EVENT = pygame.USEREVENT + len(events) + 1
+        events[self.EVENT] = self
+        self.set_type(type)
         self.rect = self.image.get_rect().move(pos_x, pos_y)
         self.rect.x -= self.rect.w // 2
         self.rect.y -= self.rect.h // 2
-        self.EVENT = pygame.USEREVENT + len(events) + 1
-        self.duration = duration
-        self.set_duration(duration)
-        events[self.EVENT] = self
+
+    def set_type(self, type=0):
+        self.type, player_filename, self.speed, self.bullet_filename, self.duration, self.speeds = players[type]
+        self.image = load_image(player_filename)
+        self.set_duration(self.duration)
 
     def set_duration(self, dur):
         self.duration = dur
@@ -169,12 +173,19 @@ class Present(pygame.sprite.Sprite):
         self.rect.y += self.vy
         if pygame.sprite.spritecollideany(self, player_group):
             presents_group.remove(self)
+            player.set_type(0)
             if self.type == 4:
                 player.k *= 3
             elif self.type == 5:
                 player.set_duration(int(player.duration * 0.1))
             elif self.type == 6:
                 player.speed *= 5
+            elif self.type == 1:
+                player.set_type(1)
+            elif self.type == 2:
+                player.set_type(2)
+            elif self.type == 3:
+                player.set_type(0)
         if (
                 self.rect.x + self.rect.w < 0
                 or self.rect.y + self.rect.h < 0
