@@ -35,7 +35,7 @@ LIGHTBL = "lightskyblue"
 GRAY = "gray15"
 BLUE = (0, 0, 255)
 YELLOW = (255, 255, 0)
-MAGENTA = (255, 0, 255)
+RED = (255, 0, 0)
 CYAN = (0, 255, 255)
 
 d = {1: "q.txt", 2: "q.txt", 3: "q.txt"}
@@ -221,10 +221,22 @@ def start_window():
                         res = findpers(user_text)
                         name = text_box = res[0][0]
                         score = res[0][1]
+                        y_score = font.render(f"{str(score)} - Score", True, WHITE)
+                        y_scoreR = y_score.get_rect()
+                        y_scoreR.center = (
+                            width // 4 + width // 3,
+                            height // 4 + height // 8 * 3,
+                        )
                     if makeR.collidepoint(event.pos):
                         res = makepers(user_text)
                         name = text_box = res[0][0]
                         score = res[0][1]
+                        y_score = font.render(f"{str(score)} - Score", True, WHITE)
+                        y_scoreR = y_score.get_rect()
+                        y_scoreR.center = (
+                            width // 4 + width // 3,
+                            height // 4 + height // 8 * 3,
+                        )
                 if event.type == pygame.KEYDOWN:
                     clav.play()
                     if event.key == pygame.K_BACKSPACE:
@@ -246,6 +258,8 @@ def start_window():
             screen.blit(find, findR)
             pygame.draw.rect(screen, WHITE, makeR, 1)
             screen.blit(make, makeR)
+            if name != "Unknown" and name != "Записи не найдено.":
+                screen.blit(y_score, y_scoreR)
 
             text_surface = font.render(user_text, True, WHITE)
             text_rect = font.render(text_box, True, WHITE)
@@ -290,15 +304,15 @@ def start_window():
                     if Rect1.collidepoint(event.pos):
                         level_n = 1
                         is_level = True
-                        r = False
+                        # r = False
                     if Rect2.collidepoint(event.pos):
                         level_n = 2
                         is_level = True
-                        r = False
+                        # r = False
                     if Rect3.collidepoint(event.pos):
                         level_n = 3
                         is_level = True
-                        r = False
+                        # r = False
                     if enterR.collidepoint(event.pos):
                         is_main_window = True
                         is_levels_window = False
@@ -318,9 +332,11 @@ def start_window():
             clock.tick(60)
             if is_level:
                 end_game = True
-                r = False
+                is_levels_window = False
+                # r = False
                 score = start_level(d[level_n])
                 win = score > 0
+                print(score)
         if is_settings_window:
             f = 0
             screen.fill(BLACK)
@@ -344,39 +360,52 @@ def start_window():
             pygame.display.flip()
             clock.tick(60)
         if end_game:
-            font = pygame.font.SysFont("Verdana", 60)
+            font = pygame.font.SysFont("Verdana", 50)
             new_ramka = pygame.Rect(
                 width // 4,
                 height // 4,
-                width * 1 // 2,
-                height // 4 * 3,
+                width // 2,
+                height // 2,
             )
-            y_score = font.render("Back", True, WHITE)
-            y_scoreR = enter.get_rect()
-            y_scoreR.center = (width // 2, height // 4 + 10)
+            y_name = font.render(name, True, WHITE)
+            y_nameR = y_name.get_rect()
+            y_nameR.center = (width // 2, height // 4 + height // 8)
+            y_score = font.render(f"{str(score)} - Score", True, WHITE)
+            y_scoreR = y_score.get_rect()
+            y_scoreR.center = (width // 2, height // 4 + height // 8 * 3)
+
             if win:
-                f = 0
-                screen.fill(BLACK)
-                for event in pygame.event.get():
-                    if (
-                        event.type == pygame.QUIT
-                        or event.type == pygame.KEYDOWN
-                        and event.key == pygame.K_ESCAPE
-                    ):
-                        r = False
-                    if event.type == pygame.MOUSEBUTTONDOWN:
-                        click.play()
+                winner = "Mission Accomplished"
+            else:
+                winner = "Mission Failed"
+            winner_text = font.render(winner, True, RED)
+            winner_textR = winner_text.get_rect()
+            winner_textR.center = (width // 2, height // 4 + height // 8 * 2)
+            f = 0
+            screen.fill(BLACK)
+            for event in pygame.event.get():
+                if (
+                    event.type == pygame.QUIT
+                    or event.type == pygame.KEYDOWN
+                    and event.key == pygame.K_ESCAPE
+                ):
+                    r = False
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    click.play()
 
-                        if enterR.collidepoint(event.pos):
-                            is_levels_window = False
-                            is_main_window = True
-                pygame.draw.rect(screen, GRAY, new_ramka, border_radius=15)
-                pygame.draw.rect(screen, WHITE, enterR, 1)
-                screen.blit(enter, enterR)
-                screen.blit(y_score, y_scoreR)
+                    if enterR.collidepoint(event.pos):
+                        is_levels_window = False
+                        end_game = False
+                        is_main_window = True
+            pygame.draw.rect(screen, GRAY, new_ramka, border_radius=15)
+            pygame.draw.rect(screen, WHITE, enterR, 1)
+            screen.blit(enter, enterR)
+            screen.blit(y_score, y_scoreR)
+            screen.blit(winner_text, winner_textR)
+            screen.blit(y_name, y_nameR)
 
-                pygame.display.flip()
-                clock.tick(60)
+            pygame.display.flip()
+            clock.tick(60)
 
     pygame.quit()
 
