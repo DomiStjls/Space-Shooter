@@ -1,8 +1,18 @@
+# планы
+# доделать финальный экран
+# сделать обновление очков
+# сделать нормально карточки
+# сделать настройки
+# добавить музыку на финал
+# наладить систему с бд
+
+
 import pygame
 import random
 import sqlite3
 from game import start_level
 
+# создание базы данных игроков
 connection = sqlite3.connect("data/shooter_bd.db")
 cursor = connection.cursor()
 cursor.execute(
@@ -16,13 +26,13 @@ cursor.execute(
 )
 connection.commit()
 
-
+# начало игры, задание нужных параметров
 pygame.init()
 screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 width, height = screen.get_size()
 clock = pygame.time.Clock()
 
-
+# музыка + цвета
 click = pygame.mixer.Sound("data/clav.wav")
 clav = pygame.mixer.Sound("data/click.ogg")
 music = pygame.mixer.Sound("data/strange_cosmos.ogg")
@@ -37,13 +47,13 @@ BLUE = (0, 0, 255)
 YELLOW = (255, 255, 0)
 RED = (255, 0, 0)
 CYAN = (0, 255, 255)
-
+# уровни + шрифты
 d = {1: "q.txt", 2: "q.txt", 3: "q.txt"}
 
 font = pygame.font.SysFont("Verdana", 60)
 fh = pygame.font.SysFont("Verdana", 100)
 
-
+# поиск игрока с именем n
 def findpers(n):
     query = """
         SELECT name, score
@@ -56,6 +66,7 @@ def findpers(n):
     return res
 
 
+# создание игрока с именем n
 def makepers(n):
     query = """
     INSERT INTO Players VALUES(?, ?, ?);
@@ -64,11 +75,13 @@ def makepers(n):
     return findpers(n)
 
 
+# стартавая функция
 def start_window():
     end_game = False
     font = pygame.font.SysFont("Verdana", 60)
     fh = pygame.font.SysFont("Verdana", 100)
 
+    # подготовка нужных для разных экранов частей визуала(стоит доработать)
     head = fh.render("Space Shooter", True, CYAN)
     text1 = font.render("Sing  in", True, BLUE)
     text2 = font.render("  Play  ", True, BLUE)
@@ -95,15 +108,10 @@ def start_window():
     user_text = ""
     active = False
 
-    is_main_window = True
-    is_data_window = False
-    is_levels_window = False
-    is_settings_window = False
     pygame.display.set_caption("Space Shooter")
     star_field_slow = []
     star_field_medium = []
     star_field_fast = []
-    music.play(-1)
     for i in range(60):
         star_loc_x = random.randrange(0, width)
         star_loc_y = random.randrange(0, height)
@@ -118,13 +126,21 @@ def start_window():
         star_loc_x = random.randrange(0, width)
         star_loc_y = random.randrange(0, height)
         star_field_fast.append([star_loc_x, star_loc_y])
-    f = 0
-    r = True
+    music.play(-1)
+    # объявление открытого экрана + начальные данные
+    is_main_window = True
+    is_data_window = False
+    is_levels_window = False
+    is_settings_window = False
+    f = 0  # выбранное окно
+    r = True  # ход цикла
     name = "Unknown"
+    # основной цикл
     while r:
 
         if is_main_window:
-
+            # главный экран
+            end_game = False  # для досрочного выхода из игры без финального экрана
             for event in pygame.event.get():
                 if (
                     event.type == pygame.QUIT
@@ -147,7 +163,7 @@ def start_window():
                         is_main_window = False
                         is_settings_window = True
             screen.fill(BLACK)
-
+            # фон
             for star in star_field_slow:
                 star[1] += 1
                 if star[1] > height:
@@ -168,6 +184,7 @@ def start_window():
                     star[0] = random.randrange(0, width)
                     star[1] = random.randrange(-20, -5)
                 pygame.draw.circle(screen, CYAN, star, 1)
+            # отрисовка
             screen.blit(text1, textRect1)
             pygame.draw.rect(screen, BLUE, textRect1, 1)
             screen.blit(text2, textRect2)
@@ -175,9 +192,11 @@ def start_window():
             screen.blit(text3, textRect3)
             pygame.draw.rect(screen, BLUE, textRect3, 1)
             screen.blit(head, header)
+
             pygame.display.flip()
             clock.tick(60)
         if is_data_window:
+            # окно входа
             font = pygame.font.SysFont("Verdana", 30)
             f = 0
             screen.fill(BLACK)
@@ -189,7 +208,6 @@ def start_window():
             makeR = make.get_rect()
             makeR.center = (width // 4 * 3, height // 8)
 
-            # pygame.draw.rect(screen, YELLOW, (20, 20, width * 2 // 3, 40), 1)
             ramka = pygame.Rect(
                 width // 3,
                 height // 8 + find.get_height(),
@@ -248,7 +266,7 @@ def start_window():
                 color = color_active
             else:
                 color = color_passive
-
+            # отрисовка
             pygame.draw.rect(screen, color, input_rect)
             pygame.draw.rect(screen, GRAY, ramka, border_radius=15)
 
@@ -258,6 +276,7 @@ def start_window():
             screen.blit(find, findR)
             pygame.draw.rect(screen, WHITE, makeR, 1)
             screen.blit(make, makeR)
+            # заполнение полей с изменяемыми данными
             if name != "Unknown" and name != "Записи не найдено.":
                 screen.blit(y_score, y_scoreR)
 
@@ -270,10 +289,12 @@ def start_window():
                 height // 8 + 2 * find.get_height(),
             )
             screen.blit(text_rect, text_rectR)
+            # нужно для поля с именем
             input_rect.w = max(width * 2 // 3, text_surface.get_width() + 10)
             pygame.display.flip()
             clock.tick(60)
         if is_levels_window:
+            # окно с уровнями
             font = pygame.font.SysFont("Verdana", 60)
             f = 0
             screen.fill(BLACK)
@@ -291,7 +312,7 @@ def start_window():
             Rect2.center = (x + width // 7 * 2, y)
             Rect3.center = (x + width // 7 * 4, y)
 
-            is_level = False
+            is_level = False  # флаг выбран ли уровень
             for event in pygame.event.get():
                 if (
                     event.type == pygame.QUIT
@@ -331,13 +352,14 @@ def start_window():
             pygame.display.flip()
             clock.tick(60)
             if is_level:
-                end_game = True
+                end_game = True  # флаг того, как закончилась игра
+                # выходом или заходом в уровень
                 is_levels_window = False
                 # r = False
                 score = start_level(d[level_n])
-                win = score > 0
-                print(score)
+                win = score > 0  # победил человек или нет
         if is_settings_window:
+            # окно с настройками
             f = 0
             screen.fill(BLACK)
             for event in pygame.event.get():
@@ -360,6 +382,7 @@ def start_window():
             pygame.display.flip()
             clock.tick(60)
         if end_game:
+            # конечное окно для победы/поражения
             font = pygame.font.SysFont("Verdana", 50)
             new_ramka = pygame.Rect(
                 width // 4,
@@ -367,6 +390,7 @@ def start_window():
                 width // 2,
                 height // 2,
             )
+            # подведение итогов по уровню
             y_name = font.render(name, True, WHITE)
             y_nameR = y_name.get_rect()
             y_nameR.center = (width // 2, height // 4 + height // 8)
