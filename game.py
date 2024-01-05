@@ -1,3 +1,12 @@
+# Осталось сделать:
+# 1) столкновения по маскам
+# 2) сделать картинки
+# 3) добавить анимации
+# 4) убрать костыли
+# 5) проставить размеры у картинок спрайтов
+# 6) адаптивные размеры
+# 7) проставить нормальные настройки у персонажей
+
 import os
 import random
 
@@ -29,8 +38,8 @@ presents = [
 player = None
 # глобальные переменные
 pygame.init()
-# WIDTH, HEIGHT = 600, 400
 WIDTH, HEIGHT = pygame.display.get_desktop_sizes()[0]
+# WIDTH, HEIGHT = 600, 400
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 
@@ -40,13 +49,14 @@ bullet_group = pygame.sprite.Group()
 player_bullets = pygame.sprite.Group()
 enemy_bullets = pygame.sprite.Group()
 presents_group = pygame.sprite.Group()
+animation_group = pygame.sprite.Group()
 score = 0
 events = {}
 running = False
 bul_dur_k = 1
 
 
-def load_image(name, color_key=-1, width=20, height=20):
+def load_image(name, color_key=-1, width=50, height=50):
     fullname = os.path.join("data", name)
     try:
         image = pygame.image.load(fullname)
@@ -69,6 +79,7 @@ class Enemy(pygame.sprite.Sprite):
         super().__init__(enemy_group)
         self.type, image, self.bullet_filename, duration, self.speeds, self.points = enemies[type]
         self.image = load_image(image)
+        self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect().move(pos_x, pos_y)
         self.rect.x -= self.rect.w // 2
         self.rect.y -= self.rect.h // 2
@@ -79,7 +90,7 @@ class Enemy(pygame.sprite.Sprite):
 
     def update(self):
         global score
-        if pygame.sprite.spritecollideany(self, player_bullets):
+        if pygame.sprite.spritecollide(self, player_bullets, False, pygame.sprite.collide_mask):
             enemy_group.remove(self)
             score += self.points
             for key, value in events.items():
@@ -107,6 +118,7 @@ class Player(pygame.sprite.Sprite):
     def set_type(self, type=0):
         self.type, player_filename, self.bullet_filename, self.duration, self.speeds = players[type]
         self.image = load_image(player_filename)
+        self.mask = pygame.mask.from_surface(self.image)
         self.set_duration(self.duration)
 
     def set_duration(self, dur):
@@ -115,7 +127,7 @@ class Player(pygame.sprite.Sprite):
 
     def update(self):
         global running
-        if pygame.sprite.spritecollideany(self, enemy_bullets):
+        if pygame.sprite.spritecollide(self, enemy_bullets, False, pygame.sprite.collide_mask):
             running = False
 
     def shoot(self):
@@ -152,7 +164,6 @@ class Bullet(pygame.sprite.Sprite):
 
 
 class Present(pygame.sprite.Sprite):
-    # types
     """
     types:
     0) меняет тип игрока на 0
@@ -164,11 +175,12 @@ class Present(pygame.sprite.Sprite):
     """
 
     def __init__(self, x, y, type):
-        if not(0 <= type < len(presents)):
+        if not (0 <= type < len(presents)):
             return
         super().__init__(presents_group)
         self.type, image, self.speed = presents[type]
         self.image = load_image(image)
+        self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect().move(x, y)
         self.rect.x -= self.rect.w // 2
         self.rect.y -= self.rect.h // 2
@@ -178,7 +190,7 @@ class Present(pygame.sprite.Sprite):
         global player
         self.rect.x += self.vx
         self.rect.y += self.vy
-        if pygame.sprite.spritecollideany(self, player_group):
+        if pygame.sprite.spritecollide(self, player_group, False, pygame.sprite.collide_mask):
             presents_group.remove(self)
             if self.type == 3:
                 player.k *= 2
@@ -213,7 +225,6 @@ def start_level(level):
                     player = Player(x * j + x / 2, y * i + y / 2)
                 elif char != ".":
                     Enemy(int(char), x * j + x / 2, y * i + y / 2)
-    vx = vy = 0
     running = True
     while running:
         for event in pygame.event.get():
@@ -225,30 +236,9 @@ def start_level(level):
             elif event.type == pygame.MOUSEMOTION:
                 player.rect.x = event.pos[0] - player.rect.w // 2
                 player.rect.y = event.pos[1] - player.rect.h // 2
-            #     if event.key == pygame.K_LEFT:
-            #         vx = -player.speed
-            #     if event.key == pygame.K_RIGHT:
-            #         vx = player.speed
-            #     if event.key == pygame.K_UP:
-            #         vy = -player.speed
-            #     if event.key == pygame.K_DOWN:
-            #         vy = player.speed
-            # elif event.type == pygame.KEYUP:
-            #     # if event.key == pygame.K_LEFT:
-            #     #     vx = player.speed
-            #     # if event.key == pygame.K_RIGHT:
-            #     #     vx = -player.speed
-            #     # if event.key == pygame.K_UP:
-            #     #     vy = player.speed
-            #     # if event.key == pygame.K_DOWN:
-            #     #     vy = -player.speed
-            #     vx = 0
-            #     vy = 0
             elif event.type in events.keys():
                 events[event.type].shoot()
 
-        # player.rect.x += vx
-        # player.rect.y += vy
         player.rect.x = max(0, min(WIDTH - player.rect.w, player.rect.x))
         player.rect.y = max(0, min(HEIGHT - player.rect.h, player.rect.y))
 
