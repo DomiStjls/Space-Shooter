@@ -3,8 +3,6 @@ import random
 
 import pygame
 
-# константы
-FPS = 60
 # тип врага, картинка врага, картинка пули, время между выстрелами, скорости пуль(по Х и по У), очки за убийство врага
 enemies = [
     (0, "enemyr.png", "bulletr.png", 2000, [(0, 1)], 10),
@@ -26,14 +24,16 @@ presents = [
     (3, "presentspeed.png", (0, 2)),
     (4, "presenttime.png", (0, 2)),
 ]
-player = None
+
 # глобальные переменные
 pygame.init()
 WIDTH, HEIGHT = pygame.display.get_desktop_sizes()[0]
 # WIDTH, HEIGHT = 600, 400
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
+FPS = 60
 
+player = None
 player_group = pygame.sprite.Group()
 enemy_group = pygame.sprite.Group()
 bullet_group = pygame.sprite.Group()
@@ -82,6 +82,7 @@ class Enemy(pygame.sprite.Sprite):
         global score
         if pygame.sprite.spritecollide(self, player_bullets, False, pygame.sprite.collide_mask):
             enemy_group.remove(self)
+            Animation(self.rect.x + self.rect.w // 2, self.rect.y + self.rect.h, "test_animation", 60)
             score += self.points
             for key, value in events.items():
                 if value == self:
@@ -201,11 +202,31 @@ class Present(pygame.sprite.Sprite):
             presents_group.remove(self)
 
 
+class Animation(pygame.sprite.Sprite):
+    # в папке должны быть файлы 1.png, 2.png, 3.png ...
+    def __init__(self, x, y, folder,
+                 n=10):
+        super().__init__(animation_group)
+        self.images = [load_image(f"{folder}\{i}.png", None, 100, 100) for i in range(1, n + 1)]
+        self.index = -1
+        self.x = x
+        self.y = y
+
+    def update(self):
+        self.index += 1
+        if self.index >= len(self.images):
+            animation_group.remove(self)
+            return
+        self.image = self.images[self.index]
+        self.rect = self.image.get_rect().move(self.x, self.y)
+        self.rect.x -= self.rect.w // 2
+        self.rect.y -= self.rect.h // 2
+
+
 def start_level(level):
     global events, running, score, player, player_group, enemy_group, bullet_group, player_bullets, enemy_bullets, presents_group, animation_group
     score = 0
     events = {}
-    player = None
     player_group = pygame.sprite.Group()
     enemy_group = pygame.sprite.Group()
     bullet_group = pygame.sprite.Group()
@@ -253,12 +274,15 @@ def start_level(level):
         presents_group.update()
         presents_group.draw(screen)
 
-        if len(events) <= 1:
+        animation_group.update()
+        animation_group.draw(screen)
+
+        if not enemy_group.sprites():
             running = False
 
         pygame.display.flip()
         clock.tick(FPS)
-    return score if len(events) else 0
+    return score if len(events) == 1 else 0
 
 
 if __name__ == "__main__":
