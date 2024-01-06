@@ -1,12 +1,3 @@
-# Осталось сделать:
-# 1) столкновения по маскам
-# 2) сделать картинки
-# 3) добавить анимации
-# 4) убрать костыли
-# 5) проставить размеры у картинок спрайтов
-# 6) адаптивные размеры
-# 7) проставить нормальные настройки у персонажей
-
 import os
 import random
 
@@ -53,7 +44,6 @@ animation_group = pygame.sprite.Group()
 score = 0
 events = {}
 running = False
-bul_dur_k = 1
 
 
 def load_image(name, color_key=-1, width=50, height=50):
@@ -212,9 +202,17 @@ class Present(pygame.sprite.Sprite):
 
 
 def start_level(level):
-    global events, running, score, player
+    global events, running, score, player, player_group, enemy_group, bullet_group, player_bullets, enemy_bullets, presents_group, animation_group
     score = 0
     events = {}
+    player = None
+    player_group = pygame.sprite.Group()
+    enemy_group = pygame.sprite.Group()
+    bullet_group = pygame.sprite.Group()
+    player_bullets = pygame.sprite.Group()
+    enemy_bullets = pygame.sprite.Group()
+    presents_group = pygame.sprite.Group()
+    animation_group = pygame.sprite.Group()
     with open("data/" + level) as f:
         q = f.readlines()
         x = WIDTH / (len(q[0]) - 1)
