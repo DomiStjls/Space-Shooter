@@ -1,10 +1,8 @@
 # планы
 # доделать финальный экран
-# сделать обновление очков
 # сделать нормально карточки
 # сделать настройки
 # добавить музыку на финал
-# наладить систему с бд
 
 
 import pygame
@@ -61,6 +59,7 @@ def findpers(n):
         WHERE name LIKE ?
     """
     res = cursor.execute(query, [n]).fetchall()
+    connection.commit()
     if res == []:
         return [("Записи не найдено.", "")]
     return res
@@ -72,7 +71,32 @@ def makepers(n):
     INSERT INTO Players VALUES(?, ?, ?);
     """
     res = cursor.execute(query, [int(100000 * random.random()), n, 0]).fetchall()
+    connection.commit()
     return findpers(n)
+
+def update(n, s):
+    query = """
+    UPDATE Players
+    SET score = ?
+    WHERE name = ?;
+    """
+    res = cursor.execute(query, [s, n]).fetchall()
+    connection.commit()
+def blit_text(screen, text, pos, font, color=pygame.Color(WHITE)):
+    words = [word.split(" ") for word in text.splitlines()]
+    max_width, max_height = screen.get_size()
+    x, y = pos
+    for line in words:
+        for word in line:
+            word_surface = font.render(word, 0, color)
+            word_width, word_height = word_surface.get_size()
+            if x + word_width >= max_width:
+                x = pos[0]
+                y += word_height
+            screen.blit(word_surface, (x, y))
+            x += word_width + font.size(" ")[0]
+        x = pos[0]
+        y += word_height
 
 
 # стартавая функция
@@ -85,18 +109,18 @@ def start_window():
     head = fh.render("Space Shooter", True, CYAN)
     text1 = font.render("Sing  in", True, BLUE)
     text2 = font.render("  Play  ", True, BLUE)
-    text3 = font.render("Settings", True, BLUE)
+    # text3 = font.render("Settings", True, BLUE)
 
     textRect1 = text1.get_rect()
     textRect2 = text2.get_rect()
-    textRect3 = text3.get_rect()
+    # textRect3 = text3.get_rect()
     header = head.get_rect()
     x = width // 2
-    y = height // 4 - text1.get_height() // 2
+    y = height // 3
 
-    textRect1.center = (x, y + height // 8)
-    textRect2.center = (x, y + height // 8 + height // 4 - text1.get_height() // 2)
-    textRect3.center = (x, y + height // 8 + 2 * height // 4 - text1.get_height() // 2)
+    textRect1.center = (x, y)
+    textRect2.center = (x, y * 2)
+    # textRect3.center = (x, y + height // 8 + 2 * height // 4 - text1.get_height() // 2)
     header.center = (x, head.get_height() // 2)
 
     enter = font.render("Back", True, WHITE)
@@ -132,6 +156,7 @@ def start_window():
     is_data_window = False
     is_levels_window = False
     is_settings_window = False
+    win = False
     f = 0  # выбранное окно
     r = True  # ход цикла
     name = "Unknown"
@@ -158,10 +183,12 @@ def start_window():
                         f = 2
                         is_main_window = False
                         is_levels_window = True
+                    """
                     if textRect3.collidepoint(event.pos) and f == 0:
                         f = 3
                         is_main_window = False
                         is_settings_window = True
+                    """
             screen.fill(BLACK)
             # фон
             for star in star_field_slow:
@@ -189,14 +216,24 @@ def start_window():
             pygame.draw.rect(screen, BLUE, textRect1, 1)
             screen.blit(text2, textRect2)
             pygame.draw.rect(screen, BLUE, textRect2, 1)
-            screen.blit(text3, textRect3)
-            pygame.draw.rect(screen, BLUE, textRect3, 1)
+            # screen.blit(text3, textRect3)
+            # pygame.draw.rect(screen, BLUE, textRect3, 1)
             screen.blit(head, header)
 
             pygame.display.flip()
             clock.tick(60)
         if is_data_window:
             # окно входа
+            if win:
+                res = findpers(user_text)
+                name = text_box = res[0][0]
+                score = res[0][1]
+                y_score = font.render(f"Your Score: {str(score)}", True, WHITE)
+                y_scoreR = y_score.get_rect()
+                y_scoreR.center = (
+                    width // 4 + width // 3,
+                    height // 4 + 2 * find.get_height(),
+                )
             font = pygame.font.SysFont("Verdana", 30)
             f = 0
             screen.fill(BLACK)
@@ -239,21 +276,21 @@ def start_window():
                         res = findpers(user_text)
                         name = text_box = res[0][0]
                         score = res[0][1]
-                        y_score = font.render(f"{str(score)} - Score", True, WHITE)
+                        y_score = font.render(f"Your Score: {str(score)}", True, WHITE)
                         y_scoreR = y_score.get_rect()
                         y_scoreR.center = (
                             width // 4 + width // 3,
-                            height // 4 + height // 8 * 3,
+                            height // 4 + 2 * find.get_height(),
                         )
                     if makeR.collidepoint(event.pos):
                         res = makepers(user_text)
                         name = text_box = res[0][0]
                         score = res[0][1]
-                        y_score = font.render(f"{str(score)} - Score", True, WHITE)
+                        y_score = font.render(f"Your Score: {str(score)}", True, WHITE)
                         y_scoreR = y_score.get_rect()
                         y_scoreR.center = (
                             width // 4 + width // 3,
-                            height // 4 + height // 8 * 3,
+                            height // 4 + 2 * find.get_height(),
                         )
                 if event.type == pygame.KEYDOWN:
                     clav.play()
@@ -357,8 +394,10 @@ def start_window():
                 is_levels_window = False
                 # r = False
                 score = start_level(d[level_n])
+                update(name,score)
                 win = score > 0  # победил человек или нет
         if is_settings_window:
+            text = "Игра выполнена Харламовым Максимом и Шевченко Дарьей в рамках проекта для Яндекс Лицея. В настройках вы можете выключить заставочную музыку и увидеть свои очки."
             # окно с настройками
             f = 0
             screen.fill(BLACK)
