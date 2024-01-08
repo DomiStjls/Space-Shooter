@@ -5,16 +5,16 @@ import pygame
 
 # тип врага, картинка врага, картинка пули, время между выстрелами, скорости пуль(по Х и по У), очки за убийство врага
 enemies = [
-    (0, "enemyr.png", "bulletr.png", 2000, [(0, 1)], 10),
-    (1, "enemyg.png", "bulletg.png", 2000, [(0, 1)], 20),
-    (2, "enemyb.png", "bulletb.png", 2000, [(0, 1)], 30),
+    (0, "enemy1.png", "bullet.png", 2000, [(0, 1)], 10),
+    (1, "enemy2.png", "bullet.png", 2000, [(0, 1)], 20),
+    (2, "enemy3.png", "bullet.png", 2000, [(0, 1)], 30),
 ]
 
 # тип игрока, картинка игрока, картинка пули, время между выстрелами, скорости пуль по осям
 players = [
-    (0, "playery.png", "bullety.png", 100, [(0, -10)]),
-    (1, "playero.png", "bulleto.png", 200, [(0, -10), (1, -10), (-1, -10)]),
-    (2, "playerw.png", "bulletw.png", 200, [(0, -5), (0, -10)])
+    (0, "playerr.png", "bulletr.png", 100, [(0, -10)]),
+    (1, "playerg.png", "bulletg.png", 200, [(0, -10), (1, -10), (-1, -10)]),
+    (2, "playerb.png", "bulletb.png", 200, [(0, -5), (0, -10)])
 ]
 
 presents = [
