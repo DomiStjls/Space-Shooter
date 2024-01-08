@@ -1,6 +1,5 @@
 # планы
 # доделать финальный экран
-# сделать нормально карточки
 # сделать настройки
 # добавить музыку на финал
 
@@ -34,7 +33,8 @@ clock = pygame.time.Clock()
 click = pygame.mixer.Sound("data/clav.wav")
 clav = pygame.mixer.Sound("data/click.ogg")
 music = pygame.mixer.Sound("data/strange_cosmos.ogg")
-
+win_mu = pygame.mixer.Sound("data/win.ogg")
+lose = pygame.mixer.Sound("data/lose.ogg")
 WHITE = (255, 255, 255)
 LIGHTGREY = (192, 192, 192)
 DARKGREY = (128, 128, 128)
@@ -74,6 +74,7 @@ def makepers(n):
     connection.commit()
     return findpers(n)
 
+
 def update(n, s):
     query = """
     UPDATE Players
@@ -82,6 +83,8 @@ def update(n, s):
     """
     res = cursor.execute(query, [s, n]).fetchall()
     connection.commit()
+
+
 def blit_text(screen, text, pos, font, color=pygame.Color(WHITE)):
     words = [word.split(" ") for word in text.splitlines()]
     max_width, max_height = screen.get_size()
@@ -101,6 +104,7 @@ def blit_text(screen, text, pos, font, color=pygame.Color(WHITE)):
 
 # стартавая функция
 def start_window():
+    music_play = True
     end_game = False
     font = pygame.font.SysFont("Verdana", 60)
     fh = pygame.font.SysFont("Verdana", 100)
@@ -391,13 +395,15 @@ def start_window():
             if is_level:
                 end_game = True  # флаг того, как закончилась игра
                 # выходом или заходом в уровень
+                music_play = (
+                    True  # флаг того, чтоможно снова играть музыку победы/проигрыша
+                )
                 is_levels_window = False
                 # r = False
                 score = start_level(d[level_n])
-                update(name,score)
+                update(name, score)
                 win = score > 0  # победил человек или нет
         if is_settings_window:
-            text = "Игра выполнена Харламовым Максимом и Шевченко Дарьей в рамках проекта для Яндекс Лицея. В настройках вы можете выключить заставочную музыку и увидеть свои очки."
             # окно с настройками
             f = 0
             screen.fill(BLACK)
@@ -438,8 +444,14 @@ def start_window():
             y_scoreR.center = (width // 2, height // 4 + height // 8 * 3)
 
             if win:
+                if music_play:
+                    win_mu.play(0)
+                    music_play = False
                 winner = "Mission Accomplished"
             else:
+                if music_play:
+                    lose.play(0)
+                    music_play = False
                 winner = "Mission Failed"
             winner_text = font.render(winner, True, RED)
             winner_textR = winner_text.get_rect()
