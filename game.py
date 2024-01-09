@@ -3,11 +3,11 @@ import random
 
 import pygame
 
-# тип врага, картинка врага, картинка пули, время между выстрелами, скорости пуль(по Х и по У), очки за убийство врага
+# тип врага, картинка врага, картинка пули, папка с анимацией, время между выстрелами, скорости пуль(по Х и по У), очки за убийство врага
 enemies = [
-    (0, "enemy1.png", "bullet.png", 2000, [(0, 1)], 10),
-    (1, "enemy2.png", "bullet.png", 2000, [(0, 1)], 20),
-    (2, "enemy3.png", "bullet.png", 2000, [(0, 1)], 30),
+    (0, "enemy1.png", "bullet.png", "animation1", 3000, [(0, 1)], 10),
+    (1, "enemy2.png", "bullet.png", "animation1", 3000, [(0, 1)], 20),
+    (2, "enemy3.png", "bullet.png", "animation1", 3000, [(0, 1)], 30),
 ]
 
 # тип игрока, картинка игрока, картинка пули, время между выстрелами, скорости пуль по осям
@@ -67,7 +67,7 @@ class Enemy(pygame.sprite.Sprite):
 
     def __init__(self, type, pos_x, pos_y):
         super().__init__(enemy_group)
-        self.type, image, self.bullet_filename, duration, self.speeds, self.points = enemies[type]
+        self.type, image, self.bullet_filename, self.folder, duration, self.speeds, self.points = enemies[type]
         self.image = load_image(image)
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect().move(pos_x, pos_y)
@@ -82,7 +82,7 @@ class Enemy(pygame.sprite.Sprite):
         global score
         if pygame.sprite.spritecollide(self, player_bullets, False, pygame.sprite.collide_mask):
             enemy_group.remove(self)
-            Animation(self.rect.x + self.rect.w // 2, self.rect.y + self.rect.h, "test_animation", 60)
+            Animation(self.rect.x + self.rect.w // 2, self.rect.y + self.rect.h, self.folder)
             score += self.points
             for key, value in events.items():
                 if value == self:
@@ -205,7 +205,7 @@ class Present(pygame.sprite.Sprite):
 class Animation(pygame.sprite.Sprite):
     # в папке должны быть файлы 1.png, 2.png, 3.png ...
     def __init__(self, x, y, folder,
-                 n=10):
+                 n=8):
         super().__init__(animation_group)
         self.images = [load_image(f"{folder}\{i}.png", None, 100, 100) for i in range(1, n + 1)]
         self.index = -1
