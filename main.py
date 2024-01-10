@@ -42,7 +42,7 @@ BLACK = (0, 0, 0)
 LIGHTBL = "lightskyblue"
 GRAY = "gray15"
 BLUE = (0, 0, 255)
-YELLOW = (255, 255, 0)
+GREEN = (100, 255, 10)
 RED = (255, 0, 0)
 CYAN = (0, 255, 255)
 # уровни + шрифты
@@ -78,7 +78,7 @@ def makepers(n):
 def update(n, s):
     query = """
     UPDATE Players
-    SET score = ?
+    SET score = score + ?
     WHERE name = ?;
     """
     res = cursor.execute(query, [s, n]).fetchall()
@@ -104,6 +104,8 @@ def blit_text(screen, text, pos, font, color=pygame.Color(WHITE)):
 
 # стартавая функция
 def start_window():
+    click_music = True
+    back_music = True
     music_play = True
     end_game = False
     font = pygame.font.SysFont("Verdana", 60)
@@ -113,18 +115,18 @@ def start_window():
     head = fh.render("Space Shooter", True, CYAN)
     text1 = font.render("Sing  in", True, BLUE)
     text2 = font.render("  Play  ", True, BLUE)
-    # text3 = font.render("Settings", True, BLUE)
+    text3 = font.render("Settings", True, BLUE)
 
     textRect1 = text1.get_rect()
     textRect2 = text2.get_rect()
-    # textRect3 = text3.get_rect()
+    textRect3 = text3.get_rect()
     header = head.get_rect()
     x = width // 2
-    y = height // 3
+    y = height // 4
 
     textRect1.center = (x, y)
     textRect2.center = (x, y * 2)
-    # textRect3.center = (x, y + height // 8 + 2 * height // 4 - text1.get_height() // 2)
+    textRect3.center = (x, y * 3)
     header.center = (x, head.get_height() // 2)
 
     enter = font.render("Back", True, WHITE)
@@ -154,7 +156,8 @@ def start_window():
         star_loc_x = random.randrange(0, width)
         star_loc_y = random.randrange(0, height)
         star_field_fast.append([star_loc_x, star_loc_y])
-    music.play(-1)
+    if back_music:
+        music.play(-1)
     # объявление открытого экрана + начальные данные
     is_main_window = True
     is_data_window = False
@@ -178,7 +181,9 @@ def start_window():
                 ):
                     r = False
                 if event.type == pygame.MOUSEBUTTONDOWN:
-                    click.play()
+
+                    if click_music:
+                        click.play()
                     if textRect1.collidepoint(event.pos) and f == 0:
                         f = 1
                         is_main_window = False
@@ -187,12 +192,12 @@ def start_window():
                         f = 2
                         is_main_window = False
                         is_levels_window = True
-                    """
+
                     if textRect3.collidepoint(event.pos) and f == 0:
                         f = 3
                         is_main_window = False
                         is_settings_window = True
-                    """
+
             screen.fill(BLACK)
             # фон
             for star in star_field_slow:
@@ -220,8 +225,8 @@ def start_window():
             pygame.draw.rect(screen, BLUE, textRect1, 1)
             screen.blit(text2, textRect2)
             pygame.draw.rect(screen, BLUE, textRect2, 1)
-            # screen.blit(text3, textRect3)
-            # pygame.draw.rect(screen, BLUE, textRect3, 1)
+            screen.blit(text3, textRect3)
+            pygame.draw.rect(screen, BLUE, textRect3, 1)
             screen.blit(head, header)
 
             pygame.display.flip()
@@ -236,7 +241,7 @@ def start_window():
                 y_scoreR = y_score.get_rect()
                 y_scoreR.center = (
                     width // 4 + width // 3,
-                    height // 4 + 2 * find.get_height(),
+                    height // 4 + 2 * y_score.get_height(),
                 )
             font = pygame.font.SysFont("Verdana", 30)
             f = 0
@@ -269,7 +274,9 @@ def start_window():
                 ):
                     r = False
                 if event.type == pygame.MOUSEBUTTONDOWN:
-                    click.play()
+
+                    if click_music:
+                        click.play()
                     if input_rect.collidepoint(event.pos):
                         active = True
 
@@ -362,7 +369,8 @@ def start_window():
                 ):
                     r = False
                 if event.type == pygame.MOUSEBUTTONDOWN:
-                    click.play()
+                    if click_music:
+                        click.play()
                     if Rect1.collidepoint(event.pos):
                         level_n = 1
                         is_level = True
@@ -407,6 +415,47 @@ def start_window():
             # окно с настройками
             f = 0
             screen.fill(BLACK)
+            ramka_set = pygame.Rect(
+                0,
+                0,
+                width * 1 // 2,
+                height,
+            )
+            query = """
+            SELECT * FROM Players ORDER BY score
+            """
+            connection.commit()
+            font = pygame.font.SysFont("Verdana", 30)
+            fonth = pygame.font.SysFont("Verdana", 60)
+            res = [
+                f"{i + 1}. {el[1]}-{el[2]}"
+                for i, el in enumerate(cursor.execute(query).fetchall()[:4])
+            ]
+            if len(res) < 3:
+                res.append("")
+                res.append("")
+                res.append("")
+            top1 = font.render(res[0], True, WHITE)
+            top1R = top1.get_rect()
+            top2 = font.render(res[1], True, WHITE)
+            top2R = top2.get_rect()
+            top3 = font.render(res[2], True, WHITE)
+            top3R = top3.get_rect()
+            headt = fonth.render("Top of players", True, WHITE)
+            headtR = headt.get_rect()
+
+            music1 = font.render("On/Off background music", True, WHITE)
+            music2 = font.render("On/Off click music", True, WHITE)
+
+            music1R = music1.get_rect()
+            music2R = music2.get_rect()
+            music1R.center = (width * 3 // 4, height // 3)
+            music2R.center = (width * 3 // 4, height // 3 * 2)
+
+            top1R.center = (width * 1 // 4, height // 8 * 3)
+            top2R.center = (width * 1 // 4, height // 8 * 4)
+            top3R.center = (width * 1 // 4, height // 8 * 5)
+            headtR.center = (width * 1 // 4, height // 8)
             for event in pygame.event.get():
                 if (
                     event.type == pygame.QUIT
@@ -415,14 +464,31 @@ def start_window():
                 ):
                     r = False
                 if event.type == pygame.MOUSEBUTTONDOWN:
-                    click.play()
+                    if click_music:
+                        click.play()
 
                     if enterR.collidepoint(event.pos):
                         is_settings_window = False
                         is_main_window = True
-            pygame.draw.rect(screen, GRAY, ramka, border_radius=15)
+                    if music1R.collidepoint(event.pos):
+                        back_music = False if back_music else True
+                        if back_music:
+                            music.play(-1)
+                        else:
+                            music.stop()
+                    if music2R.collidepoint(event.pos):
+                        click_music = False if click_music else True
+            pygame.draw.rect(screen, GRAY, ramka_set)
             pygame.draw.rect(screen, WHITE, enterR, 1)
             screen.blit(enter, enterR)
+            screen.blit(top1, top1R)
+            screen.blit(top2, top2R)
+            screen.blit(top3, top3R)
+            screen.blit(headt, headtR)
+            screen.blit(music2, music2R)
+            pygame.draw.rect(screen, WHITE, music2R, 1)
+            screen.blit(music1, music1R)
+            pygame.draw.rect(screen, WHITE, music1R, 1)
 
             pygame.display.flip()
             clock.tick(60)
@@ -453,7 +519,7 @@ def start_window():
                     lose.play(0)
                     music_play = False
                 winner = "Mission Failed"
-            winner_text = font.render(winner, True, RED)
+            winner_text = font.render(winner, True, GREEN if win else RED)
             winner_textR = winner_text.get_rect()
             winner_textR.center = (width // 2, height // 4 + height // 8 * 2)
             f = 0
