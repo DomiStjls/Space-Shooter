@@ -243,6 +243,7 @@ def start_level(level):
                 if char != ".":
                     Enemy(int(char), x * j + x / 2, y * i + y / 2)
     player = Player(0, 0)
+    background = load_image("background.jpg", None, WIDTH, HEIGHT)
     running = True
     while running:
         for event in pygame.event.get():
@@ -260,7 +261,7 @@ def start_level(level):
         player.rect.x = max(0, min(WIDTH - player.rect.w, player.rect.x))
         player.rect.y = max(0, min(HEIGHT - player.rect.h, player.rect.y))
 
-        screen.fill(255)
+        screen.blit(background, (0, 0))
         player_group.update()
         player_group.draw(screen)
 
