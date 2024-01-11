@@ -5,22 +5,22 @@ import pygame
 
 # тип врага, картинка врага, картинка пули, папка с анимацией, время между выстрелами, скорости пуль(по Х и по У), очки за убийство врага
 enemies = [
-    (0, "enemy1.png", "bullet.png", "animation1", 3000, [(0, 1)], 10),
-    (1, "enemy2.png", "bullet.png", "animation1", 3000, [(0, 1)], 20),
-    (2, "enemy3.png", "bullet.png", "animation1", 3000, [(0, 1)], 30),
+    (0, "enemy1.png", "bullet.png", "animation1", 1500, [(0, 5)], 10),
+    (1, "enemy2.png", "bullet.png", "animation1", 2500, [(0, 20)], 20),
+    (2, "enemy3.png", "bullet.png", "animation1", 3500, [(1, 6), (-1, 6), (0, 7)], 30),
 ]
 
 # тип игрока, картинка игрока, картинка пули, время между выстрелами, скорости пуль по осям
 players = [
     (0, "playerr.png", "bulletr.png", 100, [(0, -10)]),
-    (1, "playerg.png", "bulletg.png", 200, [(0, -10), (1, -10), (-1, -10)]),
-    (2, "playerb.png", "bulletb.png", 200, [(0, -5), (0, -10)])
+    (1, "playerg.png", "bulletg.png", 500, [(0, -10), (1, -10), (-1, -10)]),
+    (2, "playerb.png", "bulletb.png", 1000, [(0, -5), (1, -5), (2, -5), (-1, -5), (-2, -5)])
 ]
 
 presents = [
-    (0, "presenty.png", (0, 2)),
-    (1, "presento.png", (0, 2)),
-    (2, "presentw.png", (0, 2)),
+    (0, "presentr.png", (0, 2)),
+    (1, "presentg.png", (0, 2)),
+    (2, "presentb.png", (0, 2)),
     (3, "presentspeed.png", (0, 2)),
     (4, "presenttime.png", (0, 2)),
 ]
@@ -68,7 +68,7 @@ class Enemy(pygame.sprite.Sprite):
     def __init__(self, type, pos_x, pos_y):
         super().__init__(enemy_group)
         self.type, image, self.bullet_filename, self.folder, duration, self.speeds, self.points = enemies[type]
-        self.image = load_image(image)
+        self.image = load_image(image, None, 50, 50)
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect().move(pos_x, pos_y)
         self.rect.x -= self.rect.w // 2
@@ -108,7 +108,7 @@ class Player(pygame.sprite.Sprite):
 
     def set_type(self, type=0):
         self.type, player_filename, self.bullet_filename, self.duration, self.speeds = players[type]
-        self.image = load_image(player_filename)
+        self.image = load_image(player_filename, None, 70, 70)
         self.mask = pygame.mask.from_surface(self.image)
         self.set_duration(self.duration)
 
@@ -133,7 +133,7 @@ class Bullet(pygame.sprite.Sprite):
             enemy_bullets.add(self)
         else:
             player_bullets.add(self)
-        self.image = load_image(image)
+        self.image = load_image(image, None, 30, 30)
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect().move(pos_x, pos_y)
         self.rect.x -= self.rect.w // 2
@@ -184,9 +184,9 @@ class Present(pygame.sprite.Sprite):
         if pygame.sprite.spritecollide(self, player_group, False, pygame.sprite.collide_mask):
             presents_group.remove(self)
             if self.type == 3:
-                player.k *= 2
+                player.k *= 1.5
             elif self.type == 4:
-                player.set_duration(int(player.duration * 0.5))
+                player.set_duration(int(player.duration * 0.7))
             elif self.type == 0:
                 player.set_type(0)
             elif self.type == 1:
@@ -240,10 +240,9 @@ def start_level(level):
         y = HEIGHT / len(q)
         for i, line in enumerate(q):
             for j, char in enumerate(line[:-1]):
-                if char == "@":
-                    player = Player(x * j + x / 2, y * i + y / 2)
-                elif char != ".":
+                if char != ".":
                     Enemy(int(char), x * j + x / 2, y * i + y / 2)
+    player = Player(0, 0)
     running = True
     while running:
         for event in pygame.event.get():
@@ -277,7 +276,7 @@ def start_level(level):
         animation_group.update()
         animation_group.draw(screen)
 
-        if not enemy_group.sprites():
+        if not enemy_group.sprites() and not animation_group.sprites():
             running = False
 
         pygame.display.flip()
