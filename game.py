@@ -286,4 +286,4 @@ def start_level(level):
 
 
 if __name__ == "__main__":
-    print(start_level("q.txt"))
+    print(start_level("level3.txt"))
