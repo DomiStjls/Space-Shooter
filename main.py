@@ -1,9 +1,3 @@
-# планы
-# доделать финальный экран
-# сделать настройки
-# добавить музыку на финал
-
-
 import pygame
 import random
 import sqlite3
@@ -234,6 +228,7 @@ def start_window():
         if is_data_window:
             # окно входа
             if win:
+                win = False
                 res = findpers(user_text)
                 name = text_box = res[0][0]
                 score = res[0][1]
@@ -429,7 +424,9 @@ def start_window():
             fonth = pygame.font.SysFont("Verdana", 60)
             res = [
                 f"{i + 1}. {el[1]}-{el[2]}"
-                for i, el in enumerate(cursor.execute(query).fetchall()[:4])
+                for i, el in enumerate(
+                    sorted(cursor.execute(query).fetchall()[:4], key=lambda el: -el[2])
+                )
             ]
             if len(res) < 3:
                 res.append("")
