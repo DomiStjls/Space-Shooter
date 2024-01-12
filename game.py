@@ -173,6 +173,8 @@ class Bullet(pygame.sprite.Sprite):
         ):
             # если пуля вышла за границы экрана, то она исчезает
             bullet_group.remove(self)
+            player_bullets.remove(self)
+            enemy_bullets.remove(self)
 
 
 class Present(pygame.sprite.Sprite):
@@ -230,7 +232,7 @@ class Animation(pygame.sprite.Sprite):
     # класс анимаций
     # в папке должны быть файлы 1.png, 2.png, 3.png, ...
     def __init__(self, x, y, folder,
-                 n=8):
+                 n=9):
         super().__init__(animation_group)
         self.images = [load_image(f"{folder}\{i}.png", -1, 100, 100) for i in range(1, n + 1)]
         self.index = -1
