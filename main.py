@@ -123,7 +123,7 @@ def start_window():
     textRect3.center = (x, y * 3)
     header.center = (x, head.get_height() // 2)
 
-    enter = font.render("Back", True, WHITE)
+    enter = font.render("Назад", True, WHITE)
     enterR = enter.get_rect()
     enterR.center = (width // 8, height // 8 * 7)
     font = pygame.font.SysFont("Verdana", 60)
