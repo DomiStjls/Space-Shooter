@@ -40,7 +40,7 @@ GREEN = (100, 255, 10)
 RED = (255, 0, 0)
 CYAN = (0, 255, 255)
 # уровни + шрифты
-d = {1: "q.txt", 2: "q.txt", 3: "q.txt"}
+d = {1: "level1.txt", 2: "level2.txt", 3: "level3.txt"}
 
 font = pygame.font.SysFont("Verdana", 60)
 fh = pygame.font.SysFont("Verdana", 100)
@@ -107,9 +107,9 @@ def start_window():
 
     # подготовка нужных для разных экранов частей визуала(стоит доработать)
     head = fh.render("Space Shooter", True, CYAN)
-    text1 = font.render("Sing  in", True, BLUE)
-    text2 = font.render("  Play  ", True, BLUE)
-    text3 = font.render("Settings", True, BLUE)
+    text1 = font.render("  Войти  ", True, BLUE)
+    text2 = font.render(" Играть ", True, BLUE)
+    text3 = font.render("Настройки", True, BLUE)
 
     textRect1 = text1.get_rect()
     textRect2 = text2.get_rect()
@@ -232,7 +232,7 @@ def start_window():
                 res = findpers(user_text)
                 name = text_box = res[0][0]
                 score = res[0][1]
-                y_score = font.render(f"Your Score: {str(score)}", True, WHITE)
+                y_score = font.render(f"Ваши очки: {str(score)}", True, WHITE)
                 y_scoreR = y_score.get_rect()
                 y_scoreR.center = (
                     width // 4 + width // 3,
@@ -241,11 +241,11 @@ def start_window():
             font = pygame.font.SysFont("Verdana", 30)
             f = 0
             screen.fill(BLACK)
-            find = font.render("Sing in", True, WHITE)
+            find = font.render("Войти", True, WHITE)
             findR = find.get_rect()
             findR.center = (width // 8, height // 8)
 
-            make = font.render("Make new account", True, WHITE)
+            make = font.render("Сделать новый аккаунт", True, WHITE)
             makeR = make.get_rect()
             makeR.center = (width // 4 * 3, height // 8)
 
@@ -282,7 +282,7 @@ def start_window():
                         res = findpers(user_text)
                         name = text_box = res[0][0]
                         score = res[0][1]
-                        y_score = font.render(f"Your Score: {str(score)}", True, WHITE)
+                        y_score = font.render(f"Ваши очки: {str(score)}", True, WHITE)
                         y_scoreR = y_score.get_rect()
                         y_scoreR.center = (
                             width // 4 + width // 3,
@@ -292,7 +292,7 @@ def start_window():
                         res = makepers(user_text)
                         name = text_box = res[0][0]
                         score = res[0][1]
-                        y_score = font.render(f"Your Score: {str(score)}", True, WHITE)
+                        y_score = font.render(f"Ваши очки: {str(score)}", True, WHITE)
                         y_scoreR = y_score.get_rect()
                         y_scoreR.center = (
                             width // 4 + width // 3,
@@ -342,9 +342,9 @@ def start_window():
             f = 0
             screen.fill(BLACK)
             level_n = None
-            lev1 = font.render("Level 1", True, BLUE)
-            lev2 = font.render("Level 2", True, BLUE)
-            lev3 = font.render("Level 3", True, BLUE)
+            lev1 = font.render("Уровень 1", True, BLUE)
+            lev2 = font.render("Уровень 2", True, BLUE)
+            lev3 = font.render("Уровень 3", True, BLUE)
             Rect1 = lev1.get_rect()
             Rect2 = lev2.get_rect()
             Rect3 = lev3.get_rect()
@@ -438,11 +438,11 @@ def start_window():
             top2R = top2.get_rect()
             top3 = font.render(res[2], True, WHITE)
             top3R = top3.get_rect()
-            headt = fonth.render("Top of players", True, WHITE)
+            headt = fonth.render("Топ игроков", True, WHITE)
             headtR = headt.get_rect()
 
-            music1 = font.render("On/Off background music", True, WHITE)
-            music2 = font.render("On/Off click music", True, WHITE)
+            music1 = font.render("Вкл./Выкл. фоновую музыку", True, WHITE)
+            music2 = font.render("Вкл./Выкл. музыку щелчка", True, WHITE)
 
             music1R = music1.get_rect()
             music2R = music2.get_rect()
@@ -502,7 +502,7 @@ def start_window():
             y_name = font.render(name, True, WHITE)
             y_nameR = y_name.get_rect()
             y_nameR.center = (width // 2, height // 4 + height // 8)
-            y_score = font.render(f"{str(score)} - Score", True, WHITE)
+            y_score = font.render(f"{str(score)} - Очки", True, WHITE)
             y_scoreR = y_score.get_rect()
             y_scoreR.center = (width // 2, height // 4 + height // 8 * 3)
 
@@ -510,12 +510,12 @@ def start_window():
                 if music_play:
                     win_mu.play(0)
                     music_play = False
-                winner = "Mission Accomplished"
+                winner = "Миссия выполнена"
             else:
                 if music_play:
                     lose.play(0)
                     music_play = False
-                winner = "Mission Failed"
+                winner = "Миссия проиграна"
             winner_text = font.render(winner, True, GREEN if win else RED)
             winner_textR = winner_text.get_rect()
             winner_textR.center = (width // 2, height // 4 + height // 8 * 2)
