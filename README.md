@@ -17,7 +17,7 @@ git clone https://github.com/DomiStjls/Space-Shooter
 cd Space-Shooter
 python main.py
 ```
-
+(Ввести в git-bash для клонирования репозитория)
 
 
 
